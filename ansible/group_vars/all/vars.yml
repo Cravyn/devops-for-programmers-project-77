@@ -1,0 +1,8 @@
+---
+pip_install_packages:
+  - name: docker
+
+postgresql_port: 5432
+terraform_dir: "{{ playbook_dir }}/../terraform"
+server_env_path: /root/.env
+redmine_env_file: .env.redmine

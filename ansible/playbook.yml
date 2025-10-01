@@ -1,0 +1,52 @@
+---
+- name: Deploy redmine
+  hosts: webservers
+  become: true
+  vars:
+    redmine_image: redmine:5.1.2
+    redmine_container_name: redmine
+
+  roles:
+    - role: geerlingguy.pip
+    - role: geerlingguy.docker
+
+  tasks:
+    - name: Copy Redmine environment file to remote server
+      copy:
+        src: "{{ playbook_dir }}/{{ redmine_env_file }}"
+        dest: "{{ server_env_path }}.redmine"
+        mode: '0600'
+
+    - name: Stop and remove old Redmine container
+      community.docker.docker_container:
+        name: "{{ redmine_container_name }}"
+        state: absent
+      failed_when: false
+
+    - name: Run Redmine container
+      community.docker.docker_container:
+        name: "{{ redmine_container_name }}"
+        image: "{{ redmine_image }}"
+        env_file: "{{ server_env_path }}.redmine"
+        ports:
+          - "{{ REDMINE_PORT }}:{{ REDMINE_PORT }}"
+        restart_policy: always
+        state: started
+    
+    - name: Import the Datadog Agent role from the Datadog collection
+      ansible.builtin.import_role:
+        name: datadog.dd.agent
+      vars:
+        datadog_api_key: "{{ DATADOG_API_KEY }}"
+        datadog_site: "{{ DATADOG_SITE }}"
+        datadog_checks:
+          http_check:
+            init_config:
+            instances: |
+              {% set servers = resources.outputs.servers.value %}
+              [{% for srv in servers %}
+                {
+                  "name": "app health {{ srv.fip }}",
+                  "url": "http://{{ srv.fip }}:{{ REDMINE_PORT }}/"
+                }{% if not loop.last %},{% endif %}
+              {% endfor %}]

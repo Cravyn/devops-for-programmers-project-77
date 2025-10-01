@@ -1,0 +1,7 @@
+ansible/.password
+ansible/.env.redmine
+ansible/inventory.ini
+.terraform*
+terraform/*.tfstate*
+terraform/backend.conf
+terraform/secrets.*

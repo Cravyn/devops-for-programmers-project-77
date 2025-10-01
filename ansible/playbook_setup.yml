@@ -1,0 +1,19 @@
+---
+- hosts: localhost
+  gather_facts: no
+  vars:
+    terraform_dir: "{{ playbook_dir }}/../terraform"
+
+  tasks:
+    - name: Generate Terraform backend configuration from vault
+      template:
+        src: "{{ playbook_dir }}/templates/backend.conf.j2"
+        dest: "{{ terraform_dir }}/backend.conf"
+        mode: '0600'
+      tags: backend
+
+    - name: Initialize Terraform with PostgreSQL backend
+      shell: |
+        cd {{ terraform_dir }}
+        terraform init -migrate-state -backend-config=backend.conf
+      tags: backend

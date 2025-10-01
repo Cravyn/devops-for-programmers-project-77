@@ -1,0 +1,4 @@
+[webservers]
+{% for server in resources.outputs.servers.value %}
+{{ server.name }} ansible_host={{ server.fip }} ansible_user=ubuntu
+{% endfor %}

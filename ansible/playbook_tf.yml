@@ -1,0 +1,53 @@
+---
+- hosts: localhost
+  gather_facts: no
+
+  tasks:
+    - name: Generate Terraform secrets from vault
+      template:
+        src: "{{ playbook_dir }}/templates/secrets.auto.tfvars.j2"
+        dest: "{{ terraform_dir }}/secrets.auto.tfvars"
+        mode: '0600'
+      tags: terraform
+
+    - name: Change infrastructure with terraform
+      community.general.terraform:
+        project_path: "{{ terraform_dir }}"
+        variables:
+          login: "{{ MCS_LOGIN }}"
+          pass: "{{ MCS_PASS }}"
+          pid: "{{ MCS_PID }}"
+          datadog_api_key: "{{ DATADOG_API_KEY }}"
+          datadog_app_key: "{{ DATADOG_APP_KEY }}"
+          pg_database: "{{ POSTGRESQL_DB }}"
+          pg_username: "{{ POSTGRESQL_USER }}"
+          pg_password: "{{ POSTGRESQL_PASSWORD }}"
+        force_init: yes
+        state: "{{ terraform_state }}"
+      environment:
+        TF_LOG: DEBUG
+        TF_LOG_PATH: /tmp/terraform.log
+      tags: terraform
+      register: resources
+
+    - name: Show Terraform logs
+      ansible.builtin.shell: cat /tmp/terraform.log
+      register: tf_logs
+      ignore_errors: yes
+      tags: terraform
+
+    - name: Print Terraform logs
+      ansible.builtin.debug:
+        msg: "{{ tf_logs.stdout }}"
+      tags: terraform
+
+    - name: Create inventory file
+      template:
+        src: "{{ playbook_dir }}/templates/inventory.ini.j2"
+        dest: "{{ playbook_dir }}/inventory.ini"
+
+    - name: Create .env for Redmine
+      ansible.builtin.template:
+        src: "{{ playbook_dir }}/templates/redmine.env.j2"
+        dest: "{{ playbook_dir }}/{{ redmine_env_file }}"
+        mode: '0600'
