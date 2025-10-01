@@ -12,7 +12,7 @@
 
   tasks:
     - name: Copy Redmine environment file to remote server
-      copy:
+      ansible.builtin.copy:
         src: "{{ playbook_dir }}/{{ redmine_env_file }}"
         dest: "{{ server_env_path }}.redmine"
         mode: '0600'
@@ -32,7 +32,7 @@
           - "{{ REDMINE_PORT }}:{{ REDMINE_PORT }}"
         restart_policy: always
         state: started
-    
+
     - name: Import the Datadog Agent role from the Datadog collection
       ansible.builtin.import_role:
         name: datadog.dd.agent

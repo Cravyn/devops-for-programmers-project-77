@@ -17,6 +17,6 @@ deploy:
 
 encrypt-vault:
 	ansible-vault encrypt ansible/group_vars/all/vault.yml
-	
+
 edit-vault:
 	ansible-vault edit ansible/group_vars/all/vault.yml
