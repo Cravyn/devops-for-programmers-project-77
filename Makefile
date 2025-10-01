@@ -1,4 +1,4 @@
-.PHONY: requirements prepare deploy
+.PHONY: requirements tf-setup-backend tf-create tf-destroy deploy encrypt-vault edit-vault
 
 requirements:
 	ansible-galaxy install -c requirements.yml -r requirements.yml
@@ -12,11 +12,11 @@ tf-create:
 tf-destroy:
 	ansible-playbook ansible/playbook_tf.yml --vault-password-file ansible/.password -t terraform --extra-vars "terraform_state=absent"
 
-tf-unlock:
-	ansible-playbook ansible/playbook_tf.yml --vault-password-file ansible/.password -t unlock
-
 deploy:
 	ansible-playbook -i ansible/inventory.ini ansible/playbook.yml --vault-password-file ansible/.password
 
+encrypt-vault:
+	ansible-vault encrypt ansible/group_vars/all/vault.yml
+	
 edit-vault:
 	ansible-vault edit ansible/group_vars/all/vault.yml
